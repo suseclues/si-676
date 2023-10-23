@@ -1,0 +1,49 @@
+import os
+import csv
+import hashlib
+from datetime import datetime
+
+## hashlib
+def get_checksum(file_path, checksum_type):
+    checksum_type = checksum_type.lower()
+
+    with open(file_path, 'rb') as f:
+        bytes = f.read()
+        if checksum_type == 'md5':
+            hash_string = hashlib.md5(bytes).hexdigest()
+    return hash_string
+
+# folder of webfile samples
+folder_path = '/path/to/folder'
+
+# empty list to hold file info
+file_data = []
+
+# loop through files in the folder
+for root, dirs, files in os.walk(folder_path):
+    for file_name in files:
+        file_path = os.path.join(root, file_name)
+        size = os.path.getsize(file_path)
+        modified_date = datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S')
+
+        file_name, file_extension = os.path.splitext(file_name)
+
+        checksum_digest = get_checksum(file_path, 'md5')
+
+        relative_path = os.path.relpath(file_path, folder_path)
+
+        file_data.append([relative_path, file_name, file_extension[1:], size, modified_date, checksum_digest])
+
+# output to csv file
+output_csv_path = '/path/to/folder/file-manifest.csv'
+
+with open('file-manifest.csv', 'w') as f:
+    writer = csv.writer(f)
+    print('writing file manifest...')
+    writer.writerow(['relative path', 'file name', 'file extension', 'file size (bytes)', 'last modified', 'checksum'])
+    for file in file_data:
+        print('adding file')
+        writer.writerow(file)
+    print('wrote file manifest')
+
+print(f"YAYYYY! file output at {output_csv_path}")
